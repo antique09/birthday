@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>To My Amazing Sister</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at center, #864fe1 0%, #ffe1e9 100%);
+      overflow-x: hidden;
+      font-family: 'Pacifico', cursive;
+    }
+    .curtain {
+      position:fixed; z-index: 10;
+      background: rgba(54, 22, 74, 0.96);
+      width:100vw;height:100vh;
+      top:0;left:0;
+      display:flex; justify-content:center;align-items:center;
+      animation: fadeout 2.5s 2.5s forwards;
+    }
+    @keyframes fadeout {to {opacity:0; pointer-events: none;}}
+    .neon-title {
+      text-shadow: 0 0 15px #f586fc, 0 0 40px #d093fa;
+      color:#fff;
+      font-size:3em;
+      margin-top:60px;
+      text-align:center;
+      animation: drawIn 1.6s cubic-bezier(0.4,2.5,0.7,0.2) forwards;
+      opacity:0;
+    }
+    @keyframes drawIn {
+      from {letter-spacing:2em; opacity: 0;}
+      to {letter-spacing:0.05em; opacity: 1;}
+    }
+    .memory-gallery {
+      display:flex;gap:36px;justify-content:center;margin:70px 10vw 0 10vw;flex-wrap:wrap;
+    }
+    .memory {
+      width:200px;height:220px;border-radius:30px;
+      background:rgba(255,255,255,0.45);box-shadow:0 8px 40px #864ee144;
+      position:relative;overflow:hidden;
+      transform:scale(0.7);opacity:0;
+      transition:0.7s cubic-bezier(0.71, 2.5, 0.12, 1);
+    }
+    .memory.visible {transform:scale(1);opacity:1;}
+    .memory .emoji {
+      font-size:3em;display:block;margin:30px auto 0 auto;
+      animation:bounce 1.8s infinite alternate;
+    }
+    @keyframes bounce {
+      from {transform:translateY(0);}
+      to {transform:translateY(-18px);}
+    }
+    .memory span {
+      display:block;margin-top:16px;font-size:1.1em;height:45px;
+      color:#7b448c;text-shadow:0 1px #fff;
+      text-align:center;
+    }
+    .magic-btn {
+      display:block;margin:70px auto 0;border:none;
+      font-size:1.7em;
+      background:linear-gradient(90deg,#e586fc,#9ca6f7,#e0aafc,#fad6ff);
+      border-radius:99px; color:#6d3786;
+      box-shadow:0 6px 50px #f9d5fbae;
+      padding:27px 70px; cursor:pointer;
+      outline:none; transition:0.38s;
+      filter:brightness(0.93);
+      font-family:inherit;
+      animation:jiggle 1.6s infinite;
+    }
+    @keyframes jiggle {
+      0%,100% {transform:scale(1);}
+      40% {transform:scale(1.05);}
+      60% {transform:scale(0.97);}
+    }
+    .confetti {
+      pointer-events: none; position:fixed;
+      top:0;left:0;width:100vw;height:100vh;z-index:99;
+    }
+    .glass-message {
+      position:fixed;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      background:rgba(255,255,255,0.17);
+      backdrop-filter:blur(19px);
+      box-shadow:0 0 26px #e0c1e8ba;
+      border-radius:30px;padding:55px 40px;
+      text-align:center;z-index:100;
+      color:#442d4e;font-size:1.6em;display:none;
+      animation:popup 1.0s cubic-bezier(0.5,1.8,0.6,1.0);
+    }
+    @keyframes popup {
+      0% {transform:translate(-50%,-55%) scale(0.4);}
+      100% {transform:translate(-50%,-50%) scale(1);}
+    }
+    .glass-message .signature {margin-top:38px;font-family:'Pacifico';font-size:30px;color:#b78afd;}
+    .hide {display:none;}
+  </style>
+</head>
+<body>
+  <div class="curtain" id="curtain">
+    <span style="font-size:2em;color:#ffd1f7;text-shadow:0 0 22px #fff">✨🌙 Just wait... ✨</span>
+  </div>
+  <div class="neon-title" style="opacity:0;">For My Magical Sister</div>
+  <div class="memory-gallery">
+    <div class="memory"><span class="emoji">🌸</span><span>When you made me smile on tough days</span></div>
+    <div class="memory"><span class="emoji">🎨</span><span>Our secret art sessions</span></div>
+    <div class="memory"><span class="emoji">🦄</span><span>You <u>always</u> believed in magic</span></div>
+    <div class="memory"><span class="emoji">🍰</span><span>Favorite cake battles</span></div>
+  </div>
+  <button class="magic-btn">Reveal My Wish ✨</button>
+  <canvas class="confetti hide"></canvas>
+  <div class="glass-message">
+    <div>
+      “Hey <b>Sis</b> — you’re my <b>best friend</b>, partner-in-crime,
+      and a genuine star 🌟<br>
+      Wishing you all the joy, luck, and love you deserve. <br>
+      Never stop being <i>magical, fearless, and utterly YOU</i>!”<br>
+      — With all my heart
+      <div class="signature">[Your Brother AS]</div>
+    </div>
+  </div>
+  <script>
+    // Curtain fade out reveal
+    setTimeout(()=> {
+      document.getElementById('curtain').style.display = "none";
+      document.querySelector('.neon-title').style.opacity = 1;
+      setTimeout(()=>{ 
+        document.querySelectorAll('.memory').forEach((m,i)=>
+           setTimeout(()=>m.classList.add('visible'),400+400*i));
+      },500)
+    },3200);
+
+    // Confetti
+    function confettiEffect(){
+      const canvas=document.querySelector('.confetti');
+      canvas.classList.remove('hide');
+      let w=window.innerWidth,h=window.innerHeight;
+      canvas.width=w;canvas.height=h;
+      let ctx=canvas.getContext('2d');
+      let pieces=Array.from({length:150},()=>({
+        x:Math.random()*w,
+        y:Math.random()*-h,
+        s:10+Math.random()*20,
+        c:`hsl(${Math.random()*360},80%,77%)`,
+        v:2+Math.random()*4
+      }));
+      let end=Date.now()+2200;
+      function draw(){
+        ctx.clearRect(0,0,w,h);
+        pieces.forEach(p=>{
+          ctx.fillStyle=p.c;
+          ctx.fillRect(p.x,p.y,p.s,p.s*0.4);
+          p.y+=p.v;
+          if(p.y>h)p.y=-40;
+        });
+        if(Date.now()<end) requestAnimationFrame(draw);
+        else canvas.classList.add('hide');
+      }
+      draw();
+    }
+
+    // Message popup
+    document.querySelector('.magic-btn').onclick = function(){
+      confettiEffect();
+      document.querySelector('.glass-message').style.display = "block";
+      this.style.display = "none";
+    }
+  </script>
+</body>
+</html>
