@@ -11,6 +11,11 @@
       background: radial-gradient(ellipse at center, #864fe1 0%, #ffe1e9 100%);
       overflow-x: hidden;
       font-family: 'Pacifico', cursive;
+      transition: background 0.3s ease, filter 0.3s ease;
+    }
+    body.beat {
+      background: radial-gradient(ellipse at center, #a06bf3 0%, #ffd6f0 100%);
+      filter: brightness(1.2);
     }
     .curtain {
       position:fixed; z-index: 10;
@@ -29,6 +34,7 @@
       text-align:center;
       animation: drawIn 1.6s cubic-bezier(0.4,2.5,0.7,0.2) forwards;
       opacity:0;
+      transition: text-shadow 0.2s ease, transform 0.2s ease;
     }
     @keyframes drawIn {
       from {letter-spacing:2em; opacity: 0;}
@@ -69,11 +75,27 @@
       filter:brightness(0.93);
       font-family:inherit;
       animation:jiggle 1.6s infinite;
+      position: relative;
+      overflow: hidden;
     }
     @keyframes jiggle {
       0%,100% {transform:scale(1);}
       40% {transform:scale(1.05);}
       60% {transform:scale(0.97);}
+    }
+    /* rainbow shimmer text inside button */
+    .magic-btn span {
+      background: linear-gradient(270deg, #ff00ff, #00ffff, #ffff00, #ff6600, #ff00ff);
+      background-size: 600% 600%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 6s linear infinite;
+      display: inline-block;
+      transition: filter 0.2s ease;
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
     }
     .confetti {
       pointer-events: none; position:fixed;
@@ -99,8 +121,14 @@
   </style>
 </head>
 <body>
+  <!-- 🎵 Background music -->
+  <audio id="bg-music" autoplay loop muted>
+    <source src="music.mp3" type="audio/mpeg">
+    <source src="music.ogg" type="audio/ogg">
+  </audio>
+
   <div class="curtain" id="curtain">
-     <span style="font-size:2em;color:#ffd1f7;text-shadow:0 0 22px #fff">✨🌙 Just wait... ✨</span>
+    <span style="font-size:2em;color:#ffd1f7;text-shadow:0 0 22px #fff">✨🌙 Just wait... ✨</span>
   </div>
   <div class="neon-title" style="opacity:0;">For My Magical Sister</div>
   <div class="memory-gallery">
@@ -109,7 +137,7 @@
     <div class="memory"><span class="emoji">🦄</span><span>You <u>always</u> believed in magic</span></div>
     <div class="memory"><span class="emoji">🍰</span><span>Favorite cake battles</span></div>
   </div>
-  <button class="magic-btn">Reveal My Wish ✨</button>
+  <button class="magic-btn"><span>Reveal My Wish ✨</span></button>
   <canvas class="confetti hide"></canvas>
   <div class="glass-message">
     <div>
@@ -121,6 +149,7 @@
       <div class="signature">[Your Brother AS]</div>
     </div>
   </div>
+
   <script>
     // Curtain fade out reveal
     setTimeout(()=> {
@@ -133,39 +162,130 @@
     },3200);
 
     // Confetti
-    function confettiEffect(){
-      const canvas=document.querySelector('.confetti');
+    let confettiPieces = [];
+    let ctx, canvas, w, h;
+
+    function initConfetti(){
+      canvas=document.querySelector('.confetti');
       canvas.classList.remove('hide');
-      let w=window.innerWidth,h=window.innerHeight;
-      canvas.width=w;canvas.height=h;
-      let ctx=canvas.getContext('2d');
-      let pieces=Array.from({length:150},()=>({
+      w=window.innerWidth; h=window.innerHeight;
+      canvas.width=w; canvas.height=h;
+      ctx=canvas.getContext('2d');
+
+      confettiPieces = Array.from({length:150},()=>({
         x:Math.random()*w,
         y:Math.random()*-h,
         s:10+Math.random()*20,
         c:`hsl(${Math.random()*360},80%,77%)`,
         v:2+Math.random()*4
       }));
-      let end=Date.now()+2200;
-      function draw(){
-        ctx.clearRect(0,0,w,h);
-        pieces.forEach(p=>{
-          ctx.fillStyle=p.c;
-          ctx.fillRect(p.x,p.y,p.s,p.s*0.4);
-          p.y+=p.v;
-          if(p.y>h)p.y=-40;
-        });
-        if(Date.now()<end) requestAnimationFrame(draw);
-        else canvas.classList.add('hide');
-      }
-      draw();
     }
 
-    // Message popup
+    function drawConfetti(){
+      ctx.clearRect(0,0,w,h);
+      confettiPieces.forEach(p=>{
+        ctx.fillStyle=p.c;
+        ctx.fillRect(p.x,p.y,p.s,p.s*0.4);
+        p.y+=p.v;
+        if(p.y>h)p.y=-40;
+      });
+      requestAnimationFrame(drawConfetti);
+    }
+
+    // 🎵 Setup audio analyser for beat detection
+    let audioCtx, analyser, source, dataArray;
+    function setupAudioAnalyser(){
+      const music = document.getElementById('bg-music');
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      source = audioCtx.createMediaElementSource(music);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+
+    function beatSync(){
+      analyser.getByteFrequencyData(dataArray);
+      let bass = dataArray.slice(0, 30).reduce((a,b)=>a+b,0) / 30; // low frequencies
+
+      if(bass > 140){  // threshold for beat
+        // 💥 Confetti flash & burst
+        confettiPieces.forEach(p=>{
+          p.c = `hsl(${Math.random()*360},100%,65%)`;
+          p.y -= 20;   
+          p.v = 4 + Math.random()*6;
+        });
+
+        // 💖 Button pulse + glow
+        const btn = document.querySelector('.magic-btn');
+        if (btn) {
+          btn.style.transform = "scale(1.2)";
+          btn.style.boxShadow = "0 0 40px 15px rgba(255, 200, 255, 0.9), 0 0 70px 25px rgba(180,120,255,0.7)";
+          setTimeout(()=>{
+            btn.style.transform = "scale(1)";
+            btn.style.boxShadow = "0 6px 50px #f9d5fbae";
+          }, 220);
+        }
+
+        // 🌈 Shimmer boost on beat
+        const shimmerText = document.querySelector('.magic-btn span');
+        if (shimmerText) {
+          shimmerText.style.filter = "brightness(2)";
+          setTimeout(()=> shimmerText.style.filter = "brightness(1)", 200);
+        }
+
+        // 🌌 Page background pulse
+        document.body.classList.add("beat");
+        setTimeout(()=> document.body.classList.remove("beat"), 250);
+
+        // ✨ Title pulse & glow
+        const title = document.querySelector('.neon-title');
+        if (title) {
+          title.style.textShadow = "0 0 25px #ff9dfc, 0 0 55px #d093fa";
+          title.style.transform = "scale(1.05)";
+          setTimeout(()=>{
+            title.style.textShadow = "0 0 15px #f586fc, 0 0 40px #d093fa";
+            title.style.transform = "scale(1)";
+          }, 220);
+        }
+      }
+
+      requestAnimationFrame(beatSync);
+    }
+
+    // Message popup + music fade in
     document.querySelector('.magic-btn').onclick = function(){
-      confettiEffect();
+      initConfetti();
+      drawConfetti();
+
       document.querySelector('.glass-message').style.display = "block";
       this.style.display = "none";
+
+      // 🎵 Fade in music
+      const music = document.getElementById('bg-music');
+      music.muted = false;
+      music.volume = 0;
+      music.play();
+
+      // resume audio context (needed on Chrome/Safari)
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+      } else {
+        setupAudioAnalyser();
+        beatSync();
+      }
+
+      let vol = 0;
+      const fade = setInterval(() => {
+        if (vol < 1) {
+          vol += 0.02;
+          music.volume = Math.min(vol, 1);
+        } else {
+          clearInterval(fade);
+        }
+      }, 100);
     }
   </script>
 </body>
